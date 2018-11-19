@@ -1,7 +1,7 @@
 #define VMA_IMPLEMENTATION
 #define VK_USE_PLATFORM_WIN32_KHR
+#define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
-#include "vk_mem_alloc.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -11,6 +11,7 @@
 #include <optional>
 #include <stdio.h>
 #include <map>
+#include <set>
 
 #ifdef NDEBUG
 const bool validationLayersEnabled = false;
@@ -49,6 +50,13 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 	}
 }
 
+struct QueueFamilies
+{
+	static std::optional<uint32_t> graphicsFamily;
+};
+
+std::optional<uint32_t> QueueFamilies::graphicsFamily;
+
 class Application
 {
 
@@ -56,11 +64,15 @@ private:
 
 	GLFWwindow* window;
 	VkInstance instance;
-	VkPhysicalDevice physicalDevice;
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	VkDevice logicalDevice;
 	VkDebugUtilsMessengerEXT callback;
-
+	VkSurfaceKHR surface;
 	VkResult result;
+
+	VkQueue GraphicsQueue;
+	VkQueue PresentQueue;
+	VkQueue TransferQueue;
 
 public:
 
@@ -90,8 +102,14 @@ public:
 			std::cout << "Callback Destroyed\n";
 		}
 
+		vkDestroyDevice(logicalDevice, nullptr);
+		if (validationLayersEnabled)
+			std::cout << "Logical Device Destroyed\n";
 
 
+		vkDestroySurfaceKHR(instance, surface, nullptr);
+		if (validationLayersEnabled)
+			std::cout << "Surface Destroyed!\n";
 
 
 		vkDestroyInstance(instance, nullptr);
@@ -111,6 +129,14 @@ public:
 		window = glfwCreateWindow(WIDTH, HEIGHT, TITLE, nullptr, nullptr);
 		if(validationLayersEnabled)
 		std::cout << "Glfw window created !\n";
+	}
+
+	virtual void createWindowSurface()
+	{
+		if (glfwCreateWindowSurface(instance, window,nullptr,&surface) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create Glfw window surface!");
+		}
 	}
 
 	void pollEvents()
@@ -133,6 +159,9 @@ public:
 	{
 		createInstance();
 		setupDebugCallback();
+		createWindowSurface();
+		pickPhysicalDevice();
+		createLogicalDevice();
 	}
 
 	bool checkValidationLayerSupport()
@@ -176,6 +205,9 @@ public:
 		{
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
+
+
+		 extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 
 		return extensions;
 	}
@@ -256,6 +288,136 @@ public:
 			if (validationLayersEnabled)
 				std::cout << "Instance created \n";
 
+	}
+
+	void pickPhysicalDevice()
+	{
+		uint32_t deviceCount;
+		vkEnumeratePhysicalDevices(instance, &deviceCount, &physicalDevice);
+
+		if (deviceCount == 0)
+		{
+			throw std::runtime_error("Failed to find a physical device with Vulkan Support !\n");
+		}
+
+		std::vector<VkPhysicalDevice> devices(deviceCount);
+		vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+		for (auto device : devices)
+		{
+			VkPhysicalDeviceProperties deviceProps;
+			vkGetPhysicalDeviceProperties(device, &deviceProps);
+			VkPhysicalDeviceFeatures deviceFeatures;
+			vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+			uint32_t queueFamilyCount = 0;
+			vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+			std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+			vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+			if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			{
+				device = physicalDevice;
+				std::cout << deviceProps.deviceName << "\n";
+			}
+			else if (deviceProps.deviceType = VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+			{
+				device = physicalDevice;
+				std::cout << deviceProps.deviceName << "\n";
+			}
+
+			
+
+				for (const auto& queueFamily : queueFamilies)
+				{
+					bool graphicsQueueFamily = false;
+					bool presentQueueFamily = false;
+					bool transferQueueFamily = false;
+
+					QueueFamilies families;
+					int i = 0;
+					if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+					{
+						graphicsQueueFamily = true;
+						families.graphicsFamily = i;
+						
+						if (validationLayersEnabled)
+						std::cout << "Graphics Queue Family found! \n";
+					}
+					else if(!graphicsQueueFamily)
+					{
+						throw std::runtime_error("Failed to find suitable queue family with graphics capabilities \n");
+					}
+
+					if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
+					{
+						transferQueueFamily = true;
+						if (validationLayersEnabled)
+						std::cout << "Transfer Queue Family found!\n";
+					}
+
+					VkBool32 presentSupport = false;
+					int queueFamilyIndex = 0;
+					vkGetPhysicalDeviceSurfaceSupportKHR(device, queueFamilyIndex, surface, &presentSupport);
+
+
+					if (queueFamily.queueCount > 0 && presentSupport)
+					{
+						presentQueueFamily = true;
+						if(validationLayersEnabled)
+						std::cout << "Present Queue Family Found!\n";
+					}
+
+					i++;
+
+				}
+			
+		}
+
+
+	}
+
+	void createLogicalDevice()
+	{
+		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+		
+		QueueFamilies families;
+		std::set<uint32_t> queueFamilies = { families.graphicsFamily.value()};
+		
+		float queuePriority = 1.0f;
+		for (int i = 0; i < queueFamilies.size(); i++)
+		{
+			VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+			queueCreateInfo.queueFamilyIndex = i;
+			queueCreateInfo.queueCount = 1;
+			queueCreateInfo.pQueuePriorities = &queuePriority;
+			queueCreateInfos.push_back(queueCreateInfo);
+		}
+
+		VkDeviceCreateInfo createInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+		createInfo.pQueueCreateInfos = queueCreateInfos.data();
+		auto extensions = getRequiredExtensions();
+
+		createInfo.enabledExtensionCount = 0;
+
+		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
+		
+
+		result = vkCreateDevice(physicalDevice,&createInfo, nullptr, &logicalDevice);
+
+		if (result != VK_SUCCESS)
+			throw std::runtime_error("Failed to create logical device !\n");
+		else
+			if (validationLayersEnabled)
+				std::cout << "Logical Device created \n";
+
+
+		
+		vkGetDeviceQueue(logicalDevice, families.graphicsFamily.value() , 0, &GraphicsQueue);
+		
 	}
 
 };
