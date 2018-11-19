@@ -96,7 +96,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev_Libs\imgui-master;C:\Dev_Libs\wxWidgets-3.1.1\include;C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator\src;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -112,7 +112,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev_Libs\imgui-master;C:\Dev_Libs\wxWidgets-3.1.1\include;C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator\src;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -130,7 +130,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev_Libs\imgui-master;C:\Dev_Libs\wxWidgets-3.1.1\include;C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator\src;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -150,7 +150,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Dev_Libs\imgui-master;C:\Dev_Libs\wxWidgets-3.1.1\include;C:\VulkanSDK\1.1.82.0\Include;C:\Dev_Libs\VulkanMemoryAllocator\VulkanMemoryAllocator\src;C:\Dev_Libs\tinygltf-master\tinygltf-master;C:\Dev_Libs\tinyobjloader-master;C:\Dev_Libs\stb-master\stb-master;C:\Dev_Libs\glfw-3.2.1.bin.WIN64\include;C:\Dev_Libs\glm-0.9.9.0\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
