@@ -25,6 +25,10 @@ const std::vector<const char*> validationLayers = {
 	"VK_LAYER_LUNARG_standard_validation"
 };
 
+const std::vector<const char*> deviceExtensions = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
 
 
 const int HEIGHT = 600;
@@ -53,9 +57,11 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 struct QueueFamilies
 {
 	static std::optional<uint32_t> graphicsFamily;
+	static std::optional<uint32_t> presentFamily;
 };
 
 std::optional<uint32_t> QueueFamilies::graphicsFamily;
+std::optional<uint32_t> QueueFamilies::presentFamily;
 
 class Application
 {
@@ -69,6 +75,9 @@ private:
 	VkDebugUtilsMessengerEXT callback;
 	VkSurfaceKHR surface;
 	VkResult result;
+	VkSwapchainKHR swapchain;
+	std::vector<VkImage> swapchainImages;
+	std::vector<VkImageView> swapChainImageViews;
 
 	VkQueue GraphicsQueue;
 	VkQueue PresentQueue;
@@ -101,6 +110,17 @@ public:
 			DestroyDebugUtilsMessengerEXT(instance, callback, nullptr);
 			std::cout << "Callback Destroyed\n";
 		}
+
+		for (auto imageView : swapChainImageViews)
+		{
+			vkDestroyImageView(logicalDevice, imageView, nullptr);
+			if (validationLayersEnabled)
+				std::cout << "Image views destroyed \n";
+		}
+
+		vkDestroySwapchainKHR(logicalDevice, swapchain, nullptr);
+		if (validationLayersEnabled)
+			std::cout << "Swapchain Destroyed\n";
 
 		vkDestroyDevice(logicalDevice, nullptr);
 		if (validationLayersEnabled)
@@ -162,6 +182,7 @@ public:
 		createWindowSurface();
 		pickPhysicalDevice();
 		createLogicalDevice();
+		createSwapchain();
 	}
 
 	bool checkValidationLayerSupport()
@@ -365,6 +386,7 @@ public:
 					if (queueFamily.queueCount > 0 && presentSupport)
 					{
 						presentQueueFamily = true;
+						families.presentFamily = i;
 						if(validationLayersEnabled)
 						std::cout << "Present Queue Family Found!\n";
 					}
@@ -400,7 +422,8 @@ public:
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 		auto extensions = getRequiredExtensions();
 
-		createInfo.enabledExtensionCount = 0;
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
 		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		createInfo.ppEnabledLayerNames = validationLayers.data();
@@ -420,11 +443,89 @@ public:
 		
 	}
 
+	void createSwapchain()
+	{
+		QueueFamilies q;
+		uint32_t queues[] = { q.graphicsFamily.value(), q.presentFamily.value()};
+
+		VkSwapchainCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+		createInfo.surface = surface;
+		createInfo.minImageCount = 3;
+		createInfo.imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+		createInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+		VkExtent2D resolution = { WIDTH,HEIGHT };
+		createInfo.imageExtent = resolution;
+		createInfo.imageArrayLayers = 1;
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queues;
+		createInfo.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+		VkSurfaceCapabilitiesKHR capabilities;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+		createInfo.preTransform = capabilities.currentTransform;
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		createInfo.clipped = VK_TRUE;
+		createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+
+
+		if (vkCreateSwapchainKHR(logicalDevice, &createInfo, nullptr, &swapchain) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create swapchain");
+		}
+		else
+		{
+			std::cout << "Swapchain created\n";
+		}
+
+		uint32_t imageCount;
+		vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, nullptr);
+		swapchainImages.resize(imageCount);
+		if (validationLayersEnabled)
+		std::cout << "Number of images in the swapchain : " << imageCount << "\n";
+		vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, swapchainImages.data());
+
+		swapChainImageViews.resize(swapchainImages.size());
+
+		for (int i = 0; i < swapchainImages.size(); i++)
+		{
+			VkImageViewCreateInfo createViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+			createViewInfo.format = VK_FORMAT_B8G8R8A8_UNORM;
+			createViewInfo.image = swapchainImages[i];
+			createViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			createViewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+			createViewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+			createViewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+			createViewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+			createViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			createViewInfo.subresourceRange.baseMipLevel = 0;
+			createViewInfo.subresourceRange.levelCount = 1;
+			createViewInfo.subresourceRange.baseArrayLayer = 0;
+			createViewInfo.subresourceRange.layerCount = 1;
+
+			if (vkCreateImageView(logicalDevice, &createViewInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
+			{
+				throw std::runtime_error("Failed to create swapchain images ! \n");
+			}
+			else
+			{
+				if (validationLayersEnabled)
+					std::cout << "Image views created \n";
+			}
+		}
+		
+
+
+		
+
+	}
+
 };
 
 int main()
 {
-	Application* app = new Application;
+	std::shared_ptr<Application> app = std::make_shared<Application>();
 
 	try
 	{
@@ -436,6 +537,6 @@ int main()
 		return 1;
 	}
 
-	delete app;
+	
 	return EXIT_SUCCESS();
 }
